@@ -7,6 +7,7 @@ import ipaddress
 import shutil
 import textwrap
 import time
+from collections import Counter
 from typing import Sequence
 
 from netscout import __version__
@@ -251,6 +252,27 @@ def print_history_comparison(
         print("  None")
 
 
+def print_device_inventory(results: list[ScanResult]) -> None:
+    """Print a count of devices grouped by detected device type."""
+    if not results:
+        print("No devices found.")
+        return
+
+    inventory = Counter(result.device_type for result in results)
+
+    # Show known device types alphabetically, then Unknown at the end.
+    device_types = sorted(
+        device_type
+        for device_type in inventory
+        if device_type != "Unknown"
+    )
+    if "Unknown" in inventory:
+        device_types.append("Unknown")
+
+    for device_type in device_types:
+        print(f"{device_type}: {inventory[device_type]}")
+
+
 def print_scan_summary(
     hosts_scanned: int,
     live_hosts_found: int,
@@ -339,6 +361,9 @@ def main(argv: Sequence[str] | None = None) -> int:
         print_results_table(results)
     else:
         print("No live hosts found.")
+
+    print_section_header("Device Inventory")
+    print_device_inventory(results)
 
     open_ports_found = sum(len(result.open_ports) for result in results)
     print_section_header("Scan Summary")

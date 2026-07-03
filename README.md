@@ -2,7 +2,7 @@
 
 A beginner-friendly Python network scanner that discovers live hosts on an IPv4 subnet using concurrent ping requests.
 
-Version 3.7 adds basic device type detection, so scan results can label likely PCs, phones, cameras, smart hubs, routers, and printers. The code remains modular, commented, and built only with the Python standard library.
+Version 3.8 adds a Device Inventory summary that counts discovered devices by detected device type. The code remains modular, commented, and built only with the Python standard library.
 
 ## Features
 
@@ -25,6 +25,7 @@ Version 3.7 adds basic device type detection, so scan results can label likely P
 - Detect MAC addresses for live hosts on the local network
 - Identify common hardware vendors from the first 3 bytes of each MAC address
 - Infer a basic device type from hostname, vendor, and open ports
+- Count discovered devices by device type in a Device Inventory summary
 - Keep command-line parsing, network detection, ping logic, and scanning logic in separate modules
 - Use clear comments and type hints for learning
 
@@ -91,7 +92,7 @@ This will:
 Example output:
 
 ```
-NetScout v3.7
+NetScout v3.8
 
 Network Information
 -------------------
@@ -115,7 +116,7 @@ python -m netscout 192.168.1.0/24
 This will:
 
 ```
-NetScout v3.7
+NetScout v3.8
 
 Network Information
 -------------------
@@ -241,7 +242,15 @@ No changes found.
 
 ### Scan summary
 
-After the results table, NetScout prints a summary:
+After the results table, NetScout prints a device inventory and scan summary:
+
+```text
+Device Inventory
+----------------
+Router: 1
+Windows PC: 1
+Unknown: 1
+```
 
 ```text
 Scan Summary
@@ -258,7 +267,7 @@ Elapsed time: 12.34 seconds
 With auto-detection (no subnet provided):
 
 ```text
-NetScout v3.7
+NetScout v3.8
 
 Network Information
 -------------------
@@ -276,6 +285,12 @@ IP Address   | Hostname     | MAC Address       | Vendor  | Device Type | Status
 192.168.1.25 | laptop.local | D0:67:E5:AA:BB:CC | Dell    | Windows PC  | Live   | 445 (SMB), 3389 (RDP)
 192.168.1.42 | Unknown      | Unknown           | Unknown | Unknown     | Live   | None
 
+Device Inventory
+----------------
+Router: 1
+Windows PC: 1
+Unknown: 1
+
 Scan Summary
 ------------
 Hosts scanned: 254
@@ -290,7 +305,7 @@ Scan complete. Found 3 live host(s).
 With manual subnet:
 
 ```text
-NetScout v3.7
+NetScout v3.8
 
 Network Information
 -------------------
@@ -305,6 +320,12 @@ IP Address   | Hostname     | MAC Address       | Vendor  | Device Type | Status
 192.168.1.1  | router.local | A0:F3:C1:12:34:56 | TP-Link | Router      | Live   | 53 (DNS), 80 (HTTP)
 192.168.1.25 | laptop.local | D0:67:E5:AA:BB:CC | Dell    | Windows PC  | Live   | 445 (SMB), 3389 (RDP)
 192.168.1.42 | Unknown      | Unknown           | Unknown | Unknown     | Live   | None
+
+Device Inventory
+----------------
+Router: 1
+Windows PC: 1
+Unknown: 1
 
 Scan Summary
 ------------
@@ -336,10 +357,11 @@ Scan complete. Found 3 live host(s).
 11. `ports.py` checks common TCP ports, or the ports provided with `--ports`.
 12. The CLI prints clean section headers for network information, scan results, summary, history comparison, and export results.
 13. The CLI prints each live host in a table with IP address, hostname, MAC address, vendor, device type, status, and wrapped open ports.
-14. The CLI prints a scan summary with host, port, and elapsed-time statistics.
-15. If `--export` is used, `export.py` saves the same scan fields to CSV, JSON, or both.
-16. If `--save-history` is used, `history.py` saves the scan to a timestamped JSON file.
-17. If `--compare-last` is used, `history.py` compares the current scan with the newest previous history file.
+14. The CLI prints a device inventory summary that counts live hosts by device type.
+15. The CLI prints a scan summary with host, port, and elapsed-time statistics.
+16. If `--export` is used, `export.py` saves the same scan fields to CSV, JSON, or both.
+17. If `--save-history` is used, `history.py` saves the scan to a timestamped JSON file.
+18. If `--compare-last` is used, `history.py` compares the current scan with the newest previous history file.
 
 ## Device Intelligence Notes
 
@@ -348,6 +370,8 @@ MAC address detection depends on the local ARP table. This works best for device
 Vendor detection normalizes MAC addresses before lookup, so formats like `AA:BB:CC:11:22:33` and `aa-bb-cc-11-22-33` are treated the same. NetScout matches the first 3 bytes of the MAC address against the built-in OUI table. The table includes common prefixes for Apple, Google, Ring, Amazon, TP-Link, ASUS, Netgear, Ubiquiti, Samsung, Intel, Dell, HP, Microsoft, VMware, Raspberry Pi, Aqara, Cisco, and Synology. If no prefix matches, NetScout shows `Unknown`.
 
 Device type detection uses simple rules in `scanner.py`. Hostnames containing `desktop` or `pc`, or devices with Windows ports 135, 139, or 445 open, show `Windows PC`. Hostnames containing `iphone`, `pixel`, or `android` show `Phone`. Hostnames containing `ring`, `cam`, or `camera` show `Camera`. Hostnames containing `aqara` or `hub` show `Smart Hub`. Hostnames containing `router` or `gateway`, or devices with ports 53, 80, or 443 open, show `Router`. Hostnames containing `printer`, or devices with port 9100 open, show `Printer`. Vendor names also help as fallback hints, such as Ring for cameras, Aqara for smart hubs, and TP-Link, ASUS, Netgear, or Ubiquiti for routers. If no rule matches, NetScout shows `Unknown`.
+
+The Device Inventory section counts the `device_type` values from the current scan results. Known device types are shown alphabetically, and `Unknown` appears last.
 
 ## Safety Note
 
