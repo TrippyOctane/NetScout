@@ -6,6 +6,7 @@ import argparse
 import ipaddress
 from typing import Sequence
 
+from netscout.network import detect_network
 from netscout.ports import DEFAULT_PORTS, format_open_ports
 from netscout.scanner import ScanResult, scan_subnet
 
@@ -18,7 +19,9 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "subnet",
-        help="IPv4 subnet in CIDR notation, for example: 192.168.1.0/24",
+        nargs="?",
+        default=None,
+        help="IPv4 subnet in CIDR notation, for example: 192.168.1.0/24. If omitted, auto-detects the local network.",
     )
     parser.add_argument(
         "--timeout",
@@ -120,12 +123,35 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
 
-    try:
-        # strict=False lets users type a host address like 192.168.1.50/24.
-        # Python will normalize it to the matching network: 192.168.1.0/24.
-        network = ipaddress.ip_network(args.subnet, strict=False)
-    except ValueError as error:
-        parser.error(f"invalid subnet: {error}")
+    # Print NetScout banner
+    print("NetScout v3.1")
+
+    # If no subnet provided, auto-detect the local network
+    if args.subnet is None:
+        network_config = detect_network()
+        if network_config is None:
+            parser.error(
+                "could not auto-detect network. Please provide a subnet manually."
+            )
+
+        # Print detected network info
+        print(f"Local IP: {network_config.local_ip}")
+        if network_config.gateway:
+            print(f"Gateway: {network_config.gateway}")
+        else:
+            print("Gateway: Not available")
+        print(f"Detected Network: {network_config.cidr_network}\n")
+
+        network = network_config.cidr_network
+    else:
+        try:
+            # strict=False lets users type a host address like 192.168.1.50/24.
+            # Python will normalize it to the matching network: 192.168.1.0/24.
+            network = ipaddress.ip_network(args.subnet, strict=False)
+        except ValueError as error:
+            parser.error(f"invalid subnet: {error}")
+
+        print()  # Blank line for formatting
 
     if network.version != 4:
         parser.error("only IPv4 subnets are supported")
