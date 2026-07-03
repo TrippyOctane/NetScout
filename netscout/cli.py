@@ -8,6 +8,12 @@ from typing import Sequence
 
 from netscout import __version__
 from netscout.export import export_scan_results
+from netscout.history import (
+    compare_with_history,
+    find_latest_history_file,
+    load_history,
+    save_history,
+)
 from netscout.network import detect_network
 from netscout.ports import DEFAULT_PORTS, format_open_ports
 from netscout.scanner import ScanResult, scan_subnet
@@ -53,6 +59,16 @@ def build_parser() -> argparse.ArgumentParser:
         "--output",
         default="results",
         help="Folder for exported scan files. Default: results",
+    )
+    parser.add_argument(
+        "--save-history",
+        action="store_true",
+        help="Save this scan to the local history folder.",
+    )
+    parser.add_argument(
+        "--compare-last",
+        action="store_true",
+        help="Compare this scan to the most recent previous history file.",
     )
     return parser
 
@@ -130,6 +146,71 @@ def print_results_table(results: list[ScanResult]) -> None:
         )
 
 
+def _format_ports(ports: object) -> str:
+    """Format a plain list of port numbers for history comparison output."""
+    if not isinstance(ports, list) or not ports:
+        return "None"
+
+    return ", ".join(str(port) for port in ports)
+
+
+def print_history_comparison(
+    comparison: dict[str, list[dict[str, object]]],
+) -> None:
+    """Print a friendly summary of changes since the last saved scan."""
+    print("\nHistory comparison:")
+
+    if not any(comparison.values()):
+        print("No changes found.")
+        return
+
+    print("New devices:")
+    if comparison["new_devices"]:
+        for device in comparison["new_devices"]:
+            print(f"  {device['ip_address']} ({device['hostname']})")
+    else:
+        print("  None")
+
+    print("Missing devices:")
+    if comparison["missing_devices"]:
+        for device in comparison["missing_devices"]:
+            print(f"  {device['ip_address']} ({device['hostname']})")
+    else:
+        print("  None")
+
+    print("Hostname changes:")
+    if comparison["hostname_changes"]:
+        for change in comparison["hostname_changes"]:
+            print(
+                f"  {change['ip_address']}: "
+                f"{change['old']} -> {change['new']}"
+            )
+    else:
+        print("  None")
+
+    print("MAC address changes:")
+    if comparison["mac_address_changes"]:
+        for change in comparison["mac_address_changes"]:
+            print(
+                f"  {change['ip_address']}: "
+                f"{change['old']} -> {change['new']}"
+            )
+    else:
+        print("  None")
+
+    print("Open port changes:")
+    if comparison["open_port_changes"]:
+        for change in comparison["open_port_changes"]:
+            added = _format_ports(change["added"])
+            removed = _format_ports(change["removed"])
+            print(
+                f"  {change['ip_address']}: "
+                f"added {added}; removed {removed}"
+            )
+    else:
+        print("  None")
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     """Parse arguments, run the scan, and print the results."""
     parser = build_parser()
@@ -200,6 +281,20 @@ def main(argv: Sequence[str] | None = None) -> int:
         print("No live hosts found.")
 
     print(f"\nScan complete. Found {len(results)} live host(s).")
+
+    if args.compare_last:
+        latest_history = find_latest_history_file()
+        if latest_history is None:
+            print("\nHistory comparison: No previous history file found.")
+        else:
+            previous_results = load_history(latest_history)
+            comparison = compare_with_history(results, previous_results)
+            print(f"\nCompared with: {latest_history}")
+            print_history_comparison(comparison)
+
+    if args.save_history:
+        history_path = save_history(results)
+        print(f"Saved history: {history_path}")
 
     if args.export:
         created_files = export_scan_results(

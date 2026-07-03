@@ -2,7 +2,7 @@
 
 A beginner-friendly Python network scanner that discovers live hosts on an IPv4 subnet using concurrent ping requests.
 
-Version 3.2.1 adds clearer export feedback, so CSV and JSON saves print the file path after each scan. The code remains modular, commented, and built only with the Python standard library.
+Version 3.3 adds scan history and comparison support, so you can save snapshots and see what changed between scans. The code remains modular, commented, and built only with the Python standard library.
 
 ## Features
 
@@ -18,6 +18,8 @@ Version 3.2.1 adds clearer export feedback, so CSV and JSON saves print the file
 - Customize scanned ports with `--ports`
 - Export scan results to CSV, JSON, or both with `--export`
 - Choose the export folder with `--output`
+- Save scan history snapshots with `--save-history`
+- Compare the current scan to the last saved history with `--compare-last`
 - Detect MAC addresses for live hosts on the local network
 - Identify common hardware vendors from the MAC address OUI
 - Keep command-line parsing, network detection, ping logic, and scanning logic in separate modules
@@ -36,6 +38,7 @@ netscout/
     |-- cli.py
     |-- device.py
     |-- export.py
+    |-- history.py
     |-- network.py
     |-- ping.py
     |-- ports.py
@@ -85,7 +88,7 @@ This will:
 Example output:
 
 ```
-NetScout v3.2.1
+NetScout v3.3
 Local IP: 192.168.1.100
 Gateway: 192.168.1.1
 Detected Network: 192.168.1.0/24
@@ -104,7 +107,7 @@ python -m netscout 192.168.1.0/24
 This will:
 
 ```
-NetScout v3.2.1
+NetScout v3.3
 
 Scanning 254 hosts on 192.168.1.0/24...
 ```
@@ -185,12 +188,40 @@ Exported CSV: results\netscout_scan_20260703_102620.csv
 Exported JSON: results\netscout_scan_20260703_102620.json
 ```
 
+### Save and compare scan history
+
+Save the current scan to the default `history` folder:
+
+```powershell
+python -m netscout --save-history
+```
+
+Compare the current scan to the most recent previous history file:
+
+```powershell
+python -m netscout --compare-last
+```
+
+Compare the current scan first, then save it as the newest history snapshot:
+
+```powershell
+python -m netscout --save-history --compare-last
+```
+
+History files use timestamped names:
+
+```text
+netscout_history_YYYYMMDD_HHMMSS.json
+```
+
+The comparison report shows new devices, missing devices, hostname changes, MAC address changes, and open port changes.
+
 ## Example Output
 
 With auto-detection (no subnet provided):
 
 ```text
-NetScout v3.2.1
+NetScout v3.3
 Local IP: 192.168.1.100
 Gateway: 192.168.1.1
 Detected Network: 192.168.1.0/24
@@ -209,7 +240,7 @@ Scan complete. Found 3 live host(s).
 With manual subnet:
 
 ```text
-NetScout v3.2.1
+NetScout v3.3
 
 Scanning 254 hosts on 192.168.1.0/24...
 
@@ -240,6 +271,8 @@ Scan complete. Found 3 live host(s).
 10. `ports.py` checks common TCP ports, or the ports provided with `--ports`.
 11. The CLI prints each live host in a table with IP address, hostname, MAC address, vendor, status, and open ports.
 12. If `--export` is used, `export.py` saves the same scan fields to CSV, JSON, or both.
+13. If `--save-history` is used, `history.py` saves the scan to a timestamped JSON file.
+14. If `--compare-last` is used, `history.py` compares the current scan with the newest previous history file.
 
 ## Device Intelligence Notes
 
