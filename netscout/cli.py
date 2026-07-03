@@ -6,6 +6,8 @@ import argparse
 import ipaddress
 from typing import Sequence
 
+from netscout import __version__
+from netscout.export import export_scan_results
 from netscout.network import detect_network
 from netscout.ports import DEFAULT_PORTS, format_open_ports
 from netscout.scanner import ScanResult, scan_subnet
@@ -41,6 +43,16 @@ def build_parser() -> argparse.ArgumentParser:
             "Comma-separated TCP ports to scan. "
             f"Default: {','.join(str(port) for port in DEFAULT_PORTS)}"
         ),
+    )
+    parser.add_argument(
+        "--export",
+        choices=("csv", "json", "both"),
+        help="Save scan results as csv, json, or both.",
+    )
+    parser.add_argument(
+        "--output",
+        default="results",
+        help="Folder for exported scan files. Default: results",
     )
     return parser
 
@@ -124,7 +136,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     # Print NetScout banner
-    print("NetScout v3.1")
+    print(f"NetScout v{__version__.removesuffix('.0')}")
 
     # If no subnet provided, auto-detect the local network
     if args.subnet is None:
@@ -186,6 +198,13 @@ def main(argv: Sequence[str] | None = None) -> int:
         print_results_table(results)
     else:
         print("No live hosts found.")
+
+    if args.export:
+        export_scan_results(
+            results=results,
+            export_format=args.export,
+            output_folder=args.output,
+        )
 
     print(f"\nScan complete. Found {len(results)} live host(s).")
     return 0

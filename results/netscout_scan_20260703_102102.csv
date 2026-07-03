@@ -1,0 +1,12 @@
+ip_address,hostname,mac_address,vendor,status,open_ports
+192.168.1.1,SAX2V1R.lan,BE:96:E5:CA:C6:99,Unknown,Live,"53, 80, 443"
+192.168.1.50,Unknown,D4:AD:FC:F0:22:B4,Unknown,Live,
+192.168.1.113,Unknown,58:E4:88:65:C0:CB,Unknown,Live,
+192.168.1.125,Pixel-9-Pro-XL.lan,EA:FA:06:E1:4A:ED,Unknown,Live,
+192.168.1.130,RingFloodlightCam-b3.lan,64:9A:63:05:16:B3,Unknown,Live,
+192.168.1.173,Unknown,60:74:F4:68:76:AE,Unknown,Live,
+192.168.1.174,Aqara-Hub-M2-3F95.lan,54:EF:44:58:3F:95,Unknown,Live,
+192.168.1.193,DESKTOP-OQFOLL1.lan,Unknown,Unknown,Live,"135, 139, 445"
+192.168.1.229,Unknown,18:16:28:02:81:64,Unknown,Live,
+192.168.1.241,Ring-60b5e8.lan,90:48:6C:60:B5:E8,Unknown,Live,
+192.168.1.248,Unknown,90:23:5B:E5:A6:B3,Unknown,Live,

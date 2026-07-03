@@ -2,7 +2,7 @@
 
 A beginner-friendly Python network scanner that discovers live hosts on an IPv4 subnet using concurrent ping requests.
 
-Version 3.1 adds automatic network detection, so you can scan your local network without specifying the subnet. The code remains modular, commented, and built only with the Python standard library.
+Version 3.2 adds CSV and JSON export support, so scan results can be saved after each run. The code remains modular, commented, and built only with the Python standard library.
 
 ## Features
 
@@ -16,6 +16,8 @@ Version 3.1 adds automatic network detection, so you can scan your local network
 - Display service names beside open ports, such as `445 (SMB)`
 - Show `None` when a live host has no open ports
 - Customize scanned ports with `--ports`
+- Export scan results to CSV, JSON, or both with `--export`
+- Choose the export folder with `--output`
 - Detect MAC addresses for live hosts on the local network
 - Identify common hardware vendors from the MAC address OUI
 - Keep command-line parsing, network detection, ping logic, and scanning logic in separate modules
@@ -33,6 +35,7 @@ netscout/
     |-- __main__.py
     |-- cli.py
     |-- device.py
+    |-- export.py
     |-- network.py
     |-- ping.py
     |-- ports.py
@@ -64,7 +67,7 @@ python -m pip install -r requirements.txt
 
 ## Usage
 
-### Auto-detect your local network (NEW in v3.1)
+### Auto-detect your local network
 
 Run the scanner without a subnet to automatically detect your local IPv4 network:
 
@@ -82,7 +85,7 @@ This will:
 Example output:
 
 ```
-NetScout v3.1
+NetScout v3.2
 Local IP: 192.168.1.100
 Gateway: 192.168.1.1
 Detected Network: 192.168.1.0/24
@@ -101,7 +104,7 @@ python -m netscout 192.168.1.0/24
 This will:
 
 ```
-NetScout v3.1
+NetScout v3.2
 
 Scanning 254 hosts on 192.168.1.0/24...
 ```
@@ -140,12 +143,47 @@ By default, the scanner checks these common ports:
 22, 53, 80, 135, 139, 443, 445, 3389, 8080
 ```
 
+### Export scan results
+
+Save scan results to the default `results` folder as CSV:
+
+```powershell
+python -m netscout --export csv
+```
+
+Save scan results as JSON:
+
+```powershell
+python -m netscout --export json
+```
+
+Save both CSV and JSON files:
+
+```powershell
+python -m netscout --export both
+```
+
+Use a manual subnet, custom ports, both export formats, and an output folder:
+
+```powershell
+python -m netscout 192.168.1.0/24 --ports 22,80,443,445 --export both --output results
+```
+
+Exported files use timestamped names:
+
+```text
+netscout_scan_YYYYMMDD_HHMMSS.csv
+netscout_scan_YYYYMMDD_HHMMSS.json
+```
+
+Each export includes `ip_address`, `hostname`, `mac_address`, `vendor`, `status`, and `open_ports`.
+
 ## Example Output
 
 With auto-detection (no subnet provided):
 
 ```text
-NetScout v3.1
+NetScout v3.2
 Local IP: 192.168.1.100
 Gateway: 192.168.1.1
 Detected Network: 192.168.1.0/24
@@ -164,7 +202,7 @@ Scan complete. Found 3 live host(s).
 With manual subnet:
 
 ```text
-NetScout v3.1
+NetScout v3.2
 
 Scanning 254 hosts on 192.168.1.0/24...
 
@@ -179,7 +217,7 @@ Scan complete. Found 3 live host(s).
 
 ## How It Works
 
-1. `cli.py` reads the subnet from command-line arguments (optional in v3.1).
+1. `cli.py` reads the subnet from command-line arguments.
 2. If no subnet is provided, `network.py` auto-detects the local IPv4 network.
 3. `network.py` uses system commands (`ipconfig` on Windows) to find:
    - Your local IPv4 address (via socket routing)
@@ -194,6 +232,7 @@ Scan complete. Found 3 live host(s).
 9. `vendor.py` uses the MAC address OUI to identify common hardware vendors.
 10. `ports.py` checks common TCP ports, or the ports provided with `--ports`.
 11. The CLI prints each live host in a table with IP address, hostname, MAC address, vendor, status, and open ports.
+12. If `--export` is used, `export.py` saves the same scan fields to CSV, JSON, or both.
 
 ## Device Intelligence Notes
 
@@ -204,4 +243,3 @@ Vendor detection uses a small built-in OUI table for common vendors including De
 ## Safety Note
 
 Only scan networks you own or have permission to test. Even a basic ping scan can be unwanted traffic on networks you do not control.
-
