@@ -62,8 +62,8 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--export",
-        choices=("csv", "json", "both"),
-        help="Save scan results as csv, json, or both.",
+        choices=("csv", "json", "html", "both", "all"),
+        help="Save scan results as csv, json, html, both, or all.",
     )
     parser.add_argument(
         "--output",
@@ -326,6 +326,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     # Print NetScout banner
     print(f"NetScout v{__version__.removesuffix('.0')}")
     print_section_header("Network Information")
+    local_ip = "Not available"
+    gateway = "Not available"
 
     # If no subnet provided, auto-detect the local network
     if args.subnet is None:
@@ -336,9 +338,11 @@ def main(argv: Sequence[str] | None = None) -> int:
             )
 
         # Print detected network info
-        print(f"Local IP: {network_config.local_ip}")
+        local_ip = str(network_config.local_ip)
+        print(f"Local IP: {local_ip}")
         if network_config.gateway:
-            print(f"Gateway: {network_config.gateway}")
+            gateway = str(network_config.gateway)
+            print(f"Gateway: {gateway}")
         else:
             print("Gateway: Not available")
         print(f"Detected Network: {network_config.cidr_network}")
@@ -426,10 +430,24 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     if args.export:
         print_section_header("Export Results")
+        report_info = {
+            "version": f"NetScout v{__version__.removesuffix('.0')}",
+            "detected_network": str(network),
+            "local_ip": local_ip,
+            "gateway": gateway,
+            "summary": {
+                "hosts_scanned": host_count,
+                "live_hosts_found": len(results),
+                "ports_tested": len(ports),
+                "open_ports_found": open_ports_found,
+                "elapsed_time": f"{elapsed_seconds:.2f} seconds",
+            },
+        }
         created_files = export_scan_results(
             results=results,
             export_format=args.export,
             output_folder=args.output,
+            report_info=report_info,
         )
 
         for path in created_files:
@@ -438,5 +456,7 @@ def main(argv: Sequence[str] | None = None) -> int:
                 print(f"Exported CSV: {path}")
             elif path.suffix.lower() == ".json":
                 print(f"Exported JSON: {path}")
+            elif path.suffix.lower() == ".html":
+                print(f"Exported HTML: {path}")
 
     return 0

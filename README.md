@@ -2,7 +2,7 @@
 
 A beginner-friendly Python network scanner that discovers live hosts on an IPv4 subnet using concurrent ping requests.
 
-Version 3.9 adds a compact device-card output format with `--view cards`. The code remains modular, commented, and built only with the Python standard library.
+Version 4.0 adds clean HTML report export support with embedded styling and scan summary details. The code remains modular, commented, and built only with the Python standard library.
 
 ## Features
 
@@ -20,6 +20,7 @@ Version 3.9 adds a compact device-card output format with `--view cards`. The co
 - Show `None` when a live host has no open ports
 - Customize scanned ports with `--ports`
 - Export scan results to CSV, JSON, or both with `--export`
+- Export a clean standalone HTML report with `--export html` or `--export all`
 - Choose the export folder with `--output`
 - Save scan history snapshots with `--save-history`
 - Compare the current scan to the last saved history with `--compare-last`
@@ -93,7 +94,7 @@ This will:
 Example output:
 
 ```
-NetScout v3.9
+NetScout v4.0
 
 Network Information
 -------------------
@@ -117,7 +118,7 @@ python -m netscout 192.168.1.0/24
 This will:
 
 ```
-NetScout v3.9
+NetScout v4.0
 
 Network Information
 -------------------
@@ -198,10 +199,22 @@ Save scan results as JSON:
 python -m netscout --export json
 ```
 
+Save an HTML report:
+
+```powershell
+python -m netscout --export html
+```
+
 Save both CSV and JSON files:
 
 ```powershell
 python -m netscout --export both
+```
+
+Save CSV, JSON, and HTML files:
+
+```powershell
+python -m netscout --export all
 ```
 
 Use a manual subnet, custom ports, both export formats, and an output folder:
@@ -210,14 +223,25 @@ Use a manual subnet, custom ports, both export formats, and an output folder:
 python -m netscout 192.168.1.0/24 --ports 22,80,443,445 --export both --output results
 ```
 
+Use a manual subnet, custom ports, all export formats, and an output folder:
+
+```powershell
+python -m netscout 192.168.1.0/24 --ports 22,80,443,445 --export all --output results
+```
+
+`--export both` exports CSV and JSON only. Use `--export all` to include HTML.
+
 Exported files use timestamped names:
 
 ```text
 netscout_scan_YYYYMMDD_HHMMSS.csv
 netscout_scan_YYYYMMDD_HHMMSS.json
+netscout_scan_YYYYMMDD_HHMMSS.html
 ```
 
 Each export includes `ip_address`, `hostname`, `mac_address`, `vendor`, `device_type`, `status`, and `open_ports`.
+
+HTML reports also include the NetScout version, detected network, local IP, gateway, device inventory, scan summary, and export timestamp.
 
 After an export, NetScout prints the saved file path:
 
@@ -226,6 +250,7 @@ Export Results
 --------------
 Exported CSV: results\netscout_scan_20260703_102620.csv
 Exported JSON: results\netscout_scan_20260703_102620.json
+Exported HTML: results\netscout_scan_20260703_102620.html
 ```
 
 ### Save and compare scan history
@@ -290,7 +315,7 @@ Elapsed time: 12.34 seconds
 With auto-detection (no subnet provided):
 
 ```text
-NetScout v3.9
+NetScout v4.0
 
 Network Information
 -------------------
@@ -328,7 +353,7 @@ Scan complete. Found 3 live host(s).
 With manual subnet:
 
 ```text
-NetScout v3.9
+NetScout v4.0
 
 Network Information
 -------------------
@@ -364,7 +389,7 @@ Scan complete. Found 3 live host(s).
 With card view:
 
 ```text
-NetScout v3.9
+NetScout v4.0
 
 Network Information
 -------------------
@@ -423,7 +448,7 @@ Scan complete. Found 1 live host(s).
 13. The CLI prints each live host in the selected view: table by default, or compact device cards with `--view cards`.
 14. The CLI prints a device inventory summary that counts live hosts by device type.
 15. The CLI prints a scan summary with host, port, and elapsed-time statistics.
-16. If `--export` is used, `export.py` saves the same scan fields to CSV, JSON, or both.
+16. If `--export` is used, `export.py` saves CSV, JSON, and/or HTML report files.
 17. If `--save-history` is used, `history.py` saves the scan to a timestamped JSON file.
 18. If `--compare-last` is used, `history.py` compares the current scan with the newest previous history file.
 
