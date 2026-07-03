@@ -2,7 +2,7 @@
 
 A beginner-friendly Python network scanner that discovers live hosts on an IPv4 subnet using concurrent ping requests.
 
-Version 3.4 adds scan statistics and elapsed scan time, so each run ends with a clear summary of what was scanned and found. The code remains modular, commented, and built only with the Python standard library.
+Version 3.5 improves terminal readability with clean output sections and wrapped open-port lists. The code remains modular, commented, and built only with the Python standard library.
 
 ## Features
 
@@ -10,6 +10,7 @@ Version 3.4 adds scan statistics and elapsed scan time, so each run ends with a 
 - Scan an IPv4 subnet in CIDR notation, such as `192.168.1.0/24`
 - Ping many hosts concurrently for faster discovery
 - Display every live host found in a clean table
+- Wrap long open-port lists cleanly inside the results table
 - Display scan statistics and elapsed scan time after each run
 - Look up the hostname for each live host
 - Show `Unknown` when a live host has no hostname
@@ -89,11 +90,16 @@ This will:
 Example output:
 
 ```
-NetScout v3.4
+NetScout v3.5
+
+Network Information
+-------------------
 Local IP: 192.168.1.100
 Gateway: 192.168.1.1
 Detected Network: 192.168.1.0/24
 
+Scan Results
+------------
 Scanning 254 hosts on 192.168.1.0/24...
 ```
 
@@ -108,8 +114,14 @@ python -m netscout 192.168.1.0/24
 This will:
 
 ```
-NetScout v3.4
+NetScout v3.5
 
+Network Information
+-------------------
+Target Network: 192.168.1.0/24
+
+Scan Results
+------------
 Scanning 254 hosts on 192.168.1.0/24...
 ```
 
@@ -185,6 +197,8 @@ Each export includes `ip_address`, `hostname`, `mac_address`, `vendor`, `status`
 After an export, NetScout prints the saved file path:
 
 ```text
+Export Results
+--------------
 Exported CSV: results\netscout_scan_20260703_102620.csv
 Exported JSON: results\netscout_scan_20260703_102620.json
 ```
@@ -217,12 +231,20 @@ netscout_history_YYYYMMDD_HHMMSS.json
 
 The comparison report shows new devices, missing devices, hostname changes, MAC address changes, and open port changes.
 
+```text
+History Comparison
+------------------
+Compared with: history\netscout_history_20260703_102600.json
+No changes found.
+```
+
 ### Scan summary
 
 After the results table, NetScout prints a summary:
 
 ```text
 Scan Summary
+------------
 Hosts scanned: 254
 Live hosts found: 3
 Ports tested: 9
@@ -235,11 +257,16 @@ Elapsed time: 12.34 seconds
 With auto-detection (no subnet provided):
 
 ```text
-NetScout v3.4
+NetScout v3.5
+
+Network Information
+-------------------
 Local IP: 192.168.1.100
 Gateway: 192.168.1.1
 Detected Network: 192.168.1.0/24
 
+Scan Results
+------------
 Scanning 254 hosts on 192.168.1.0/24...
 
 IP Address   | Hostname     | MAC Address       | Vendor  | Status | Open Ports
@@ -249,6 +276,7 @@ IP Address   | Hostname     | MAC Address       | Vendor  | Status | Open Ports
 192.168.1.42 | Unknown      | Unknown           | Unknown | Live   | None
 
 Scan Summary
+------------
 Hosts scanned: 254
 Live hosts found: 3
 Ports tested: 9
@@ -261,8 +289,14 @@ Scan complete. Found 3 live host(s).
 With manual subnet:
 
 ```text
-NetScout v3.4
+NetScout v3.5
 
+Network Information
+-------------------
+Target Network: 192.168.1.0/24
+
+Scan Results
+------------
 Scanning 254 hosts on 192.168.1.0/24...
 
 IP Address   | Hostname     | MAC Address       | Vendor  | Status | Open Ports
@@ -272,6 +306,7 @@ IP Address   | Hostname     | MAC Address       | Vendor  | Status | Open Ports
 192.168.1.42 | Unknown      | Unknown           | Unknown | Live   | None
 
 Scan Summary
+------------
 Hosts scanned: 254
 Live hosts found: 3
 Ports tested: 9
@@ -297,11 +332,12 @@ Scan complete. Found 3 live host(s).
 8. `device.py` reads the local ARP table to find the host MAC address when possible.
 9. `vendor.py` uses the MAC address OUI to identify common hardware vendors.
 10. `ports.py` checks common TCP ports, or the ports provided with `--ports`.
-11. The CLI prints each live host in a table with IP address, hostname, MAC address, vendor, status, and open ports.
-12. The CLI prints a scan summary with host, port, and elapsed-time statistics.
-13. If `--export` is used, `export.py` saves the same scan fields to CSV, JSON, or both.
-14. If `--save-history` is used, `history.py` saves the scan to a timestamped JSON file.
-15. If `--compare-last` is used, `history.py` compares the current scan with the newest previous history file.
+11. The CLI prints clean section headers for network information, scan results, summary, history comparison, and export results.
+12. The CLI prints each live host in a table with IP address, hostname, MAC address, vendor, status, and wrapped open ports.
+13. The CLI prints a scan summary with host, port, and elapsed-time statistics.
+14. If `--export` is used, `export.py` saves the same scan fields to CSV, JSON, or both.
+15. If `--save-history` is used, `history.py` saves the scan to a timestamped JSON file.
+16. If `--compare-last` is used, `history.py` compares the current scan with the newest previous history file.
 
 ## Device Intelligence Notes
 

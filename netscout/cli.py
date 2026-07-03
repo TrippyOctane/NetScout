@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import argparse
 import ipaddress
+import shutil
+import textwrap
 import time
 from typing import Sequence
 
@@ -99,11 +101,29 @@ def parse_ports(value: str | None) -> list[int]:
     return ports
 
 
+def print_section_header(title: str) -> None:
+    """Print a clean section header for terminal output."""
+    print()
+    print(title)
+    print("-" * len(title))
+
+
+def _wrap_cell(value: str, width: int) -> list[str]:
+    """Wrap a table cell so long text does not wrap messily in the terminal."""
+    wrapped_lines = textwrap.wrap(
+        value,
+        width=width,
+        break_long_words=False,
+        break_on_hyphens=False,
+    )
+    return wrapped_lines or [""]
+
+
 def print_results_table(results: list[ScanResult]) -> None:
     """Print scan results in a simple table.
 
-    The table widths are calculated from the data, so longer hostnames and port
-    lists still line up without requiring a third-party formatting package.
+    The Open Ports column can get long when many ports are open. It is wrapped
+    inside the table so the terminal output stays readable.
     """
     headers = (
         "IP Address",
@@ -125,10 +145,19 @@ def print_results_table(results: list[ScanResult]) -> None:
         for result in results
     ]
 
+    terminal_width = shutil.get_terminal_size(fallback=(120, 20)).columns
+    separator_width = 3 * (len(headers) - 1)
+
     widths = [
         max(len(header), *(len(row[index]) for row in rows))
         for index, header in enumerate(headers)
     ]
+    fixed_width = sum(widths[:-1]) + separator_width
+
+    # Leave the Open Ports column wide enough to be useful, but cap it so a
+    # long list wraps neatly instead of spilling across the terminal.
+    available_open_ports_width = terminal_width - fixed_width
+    widths[-1] = max(20, min(widths[-1], available_open_ports_width))
 
     header_line = " | ".join(
         f"{header:<{widths[index]}}"
@@ -139,12 +168,22 @@ def print_results_table(results: list[ScanResult]) -> None:
     print(header_line)
     print(divider)
     for row in rows:
-        print(
-            " | ".join(
-                f"{value:<{widths[index]}}"
-                for index, value in enumerate(row)
+        wrapped_open_ports = _wrap_cell(row[-1], widths[-1])
+
+        for line_index, open_ports_line in enumerate(wrapped_open_ports):
+            if line_index == 0:
+                display_row = (*row[:-1], open_ports_line)
+            else:
+                # Continuation lines keep the Open Ports text aligned while the
+                # other columns are blank.
+                display_row = ("", "", "", "", "", open_ports_line)
+
+            print(
+                " | ".join(
+                    f"{value:<{widths[index]}}"
+                    for index, value in enumerate(display_row)
+                )
             )
-        )
 
 
 def _format_ports(ports: object) -> str:
@@ -159,8 +198,6 @@ def print_history_comparison(
     comparison: dict[str, list[dict[str, object]]],
 ) -> None:
     """Print a friendly summary of changes since the last saved scan."""
-    print("\nHistory comparison:")
-
     if not any(comparison.values()):
         print("No changes found.")
         return
@@ -220,7 +257,6 @@ def print_scan_summary(
     elapsed_seconds: float,
 ) -> None:
     """Print a short summary of scan statistics."""
-    print("\nScan Summary")
     print(f"Hosts scanned: {hosts_scanned}")
     print(f"Live hosts found: {live_hosts_found}")
     print(f"Ports tested: {ports_tested}")
@@ -235,6 +271,7 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     # Print NetScout banner
     print(f"NetScout v{__version__.removesuffix('.0')}")
+    print_section_header("Network Information")
 
     # If no subnet provided, auto-detect the local network
     if args.subnet is None:
@@ -250,7 +287,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             print(f"Gateway: {network_config.gateway}")
         else:
             print("Gateway: Not available")
-        print(f"Detected Network: {network_config.cidr_network}\n")
+        print(f"Detected Network: {network_config.cidr_network}")
 
         network = network_config.cidr_network
     else:
@@ -261,7 +298,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         except ValueError as error:
             parser.error(f"invalid subnet: {error}")
 
-        print()  # Blank line for formatting
+        print(f"Target Network: {network}")
 
     if network.version != 4:
         parser.error("only IPv4 subnets are supported")
@@ -283,6 +320,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         # one address for broadcast, so those are not useful host targets.
         host_count -= 2
 
+    print_section_header("Scan Results")
     print(f"Scanning {host_count} hosts on {network}...\n")
 
     # Measure only the actual scan work, not argument parsing or printing.
@@ -301,6 +339,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         print("No live hosts found.")
 
     open_ports_found = sum(len(result.open_ports) for result in results)
+    print_section_header("Scan Summary")
     print_scan_summary(
         hosts_scanned=host_count,
         live_hosts_found=len(results),
@@ -312,13 +351,14 @@ def main(argv: Sequence[str] | None = None) -> int:
     print(f"\nScan complete. Found {len(results)} live host(s).")
 
     if args.compare_last:
+        print_section_header("History Comparison")
         latest_history = find_latest_history_file()
         if latest_history is None:
-            print("\nHistory comparison: No previous history file found.")
+            print("No previous history file found.")
         else:
             previous_results = load_history(latest_history)
             comparison = compare_with_history(results, previous_results)
-            print(f"\nCompared with: {latest_history}")
+            print(f"Compared with: {latest_history}")
             print_history_comparison(comparison)
 
     if args.save_history:
@@ -326,6 +366,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         print(f"Saved history: {history_path}")
 
     if args.export:
+        print_section_header("Export Results")
         created_files = export_scan_results(
             results=results,
             export_format=args.export,
