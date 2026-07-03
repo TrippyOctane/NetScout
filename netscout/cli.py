@@ -130,6 +130,7 @@ def print_results_table(results: list[ScanResult]) -> None:
         "Hostname",
         "MAC Address",
         "Vendor",
+        "Device Type",
         "Status",
         "Open Ports",
     )
@@ -139,6 +140,7 @@ def print_results_table(results: list[ScanResult]) -> None:
             result.hostname,
             result.mac_address,
             result.vendor,
+            result.device_type,
             result.status,
             format_open_ports(result.open_ports),
         )
@@ -176,7 +178,7 @@ def print_results_table(results: list[ScanResult]) -> None:
             else:
                 # Continuation lines keep the Open Ports text aligned while the
                 # other columns are blank.
-                display_row = ("", "", "", "", "", open_ports_line)
+                display_row = ("", "", "", "", "", "", open_ports_line)
 
             print(
                 " | ".join(

@@ -21,6 +21,7 @@ class ScanResult:
     hostname: str
     mac_address: str
     vendor: str
+    device_type: str
     open_ports: list[int]
     status: str = "Live"
 
@@ -37,6 +38,70 @@ def lookup_hostname(address: ipaddress.IPv4Address) -> str:
         return "Unknown"
 
     return hostname or "Unknown"
+
+
+def infer_device_type(hostname: str, vendor: str, open_ports: list[int]) -> str:
+    """Guess a simple device type from hostname, vendor, and open ports.
+
+    These rules are intentionally basic and easy to read. They are not perfect,
+    but they give beginners a helpful first guess.
+
+    >>> infer_device_type("DESKTOP-123", "Dell", [])
+    'Windows PC'
+    >>> infer_device_type("Pixel-9-Pro", "Google", [])
+    'Phone'
+    >>> infer_device_type("front-camera", "Unknown", [])
+    'Camera'
+    >>> infer_device_type("Unknown", "Unknown", [9100])
+    'Printer'
+    """
+    hostname_text = hostname.lower()
+    vendor_text = vendor.lower()
+    open_port_set = set(open_ports)
+
+    if (
+        "desktop" in hostname_text
+        or "pc" in hostname_text
+        or vendor_text in ("dell", "hp", "microsoft")
+        or open_port_set & {135, 139, 445}
+    ):
+        return "Windows PC"
+
+    if (
+        "iphone" in hostname_text
+        or "pixel" in hostname_text
+        or "android" in hostname_text
+        or vendor_text in ("apple", "google", "samsung")
+    ):
+        return "Phone"
+
+    if (
+        "ring" in hostname_text
+        or "cam" in hostname_text
+        or "camera" in hostname_text
+        or vendor_text == "ring"
+    ):
+        return "Camera"
+
+    if (
+        "aqara" in hostname_text
+        or "hub" in hostname_text
+        or vendor_text == "aqara"
+    ):
+        return "Smart Hub"
+
+    if (
+        "router" in hostname_text
+        or "gateway" in hostname_text
+        or vendor_text in ("tp-link", "asus", "netgear", "ubiquiti")
+        or open_port_set & {53, 80, 443}
+    ):
+        return "Router"
+
+    if "printer" in hostname_text or 9100 in open_port_set:
+        return "Printer"
+
+    return "Unknown"
 
 
 def scan_subnet(
@@ -77,18 +142,26 @@ def scan_subnet(
                 # the table after a host responds so MAC lookup has a chance.
                 arp_table = get_arp_table()
                 mac_address = find_mac_address(str(host), arp_table)
+                hostname = lookup_hostname(host)
+                vendor = lookup_vendor(mac_address)
+                open_ports = scan_ports(
+                    address=str(host),
+                    ports=ports_to_scan,
+                    timeout=timeout,
+                )
 
                 results.append(
                     ScanResult(
                         ip_address=host,
-                        hostname=lookup_hostname(host),
+                        hostname=hostname,
                         mac_address=mac_address,
-                        vendor=lookup_vendor(mac_address),
-                        open_ports=scan_ports(
-                            address=str(host),
-                            ports=ports_to_scan,
-                            timeout=timeout,
+                        vendor=vendor,
+                        device_type=infer_device_type(
+                            hostname=hostname,
+                            vendor=vendor,
+                            open_ports=open_ports,
                         ),
+                        open_ports=open_ports,
                     )
                 )
 

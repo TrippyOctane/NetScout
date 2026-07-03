@@ -15,6 +15,7 @@ EXPORT_FIELDS = (
     "hostname",
     "mac_address",
     "vendor",
+    "device_type",
     "status",
     "open_ports",
 )
@@ -32,6 +33,7 @@ def _result_to_row(result: ScanResult) -> dict[str, object]:
         "hostname": result.hostname,
         "mac_address": result.mac_address,
         "vendor": result.vendor,
+        "device_type": result.device_type,
         "status": result.status,
         "open_ports": result.open_ports,
     }
