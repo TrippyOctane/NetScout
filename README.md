@@ -2,7 +2,7 @@
 
 A beginner-friendly Python network scanner that discovers live hosts on an IPv4 subnet using concurrent ping requests.
 
-Version 3.2 adds CSV and JSON export support, so scan results can be saved after each run. The code remains modular, commented, and built only with the Python standard library.
+Version 3.2.1 adds clearer export feedback, so CSV and JSON saves print the file path after each scan. The code remains modular, commented, and built only with the Python standard library.
 
 ## Features
 
@@ -85,7 +85,7 @@ This will:
 Example output:
 
 ```
-NetScout v3.2
+NetScout v3.2.1
 Local IP: 192.168.1.100
 Gateway: 192.168.1.1
 Detected Network: 192.168.1.0/24
@@ -104,7 +104,7 @@ python -m netscout 192.168.1.0/24
 This will:
 
 ```
-NetScout v3.2
+NetScout v3.2.1
 
 Scanning 254 hosts on 192.168.1.0/24...
 ```
@@ -178,12 +178,19 @@ netscout_scan_YYYYMMDD_HHMMSS.json
 
 Each export includes `ip_address`, `hostname`, `mac_address`, `vendor`, `status`, and `open_ports`.
 
+After an export, NetScout prints the saved file path:
+
+```text
+Exported CSV: results\netscout_scan_20260703_102620.csv
+Exported JSON: results\netscout_scan_20260703_102620.json
+```
+
 ## Example Output
 
 With auto-detection (no subnet provided):
 
 ```text
-NetScout v3.2
+NetScout v3.2.1
 Local IP: 192.168.1.100
 Gateway: 192.168.1.1
 Detected Network: 192.168.1.0/24
@@ -202,7 +209,7 @@ Scan complete. Found 3 live host(s).
 With manual subnet:
 
 ```text
-NetScout v3.2
+NetScout v3.2.1
 
 Scanning 254 hosts on 192.168.1.0/24...
 

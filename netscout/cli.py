@@ -199,12 +199,20 @@ def main(argv: Sequence[str] | None = None) -> int:
     else:
         print("No live hosts found.")
 
+    print(f"\nScan complete. Found {len(results)} live host(s).")
+
     if args.export:
-        export_scan_results(
+        created_files = export_scan_results(
             results=results,
             export_format=args.export,
             output_folder=args.output,
         )
 
-    print(f"\nScan complete. Found {len(results)} live host(s).")
+        for path in created_files:
+            # The suffix tells us which friendly label to print.
+            if path.suffix.lower() == ".csv":
+                print(f"Exported CSV: {path}")
+            elif path.suffix.lower() == ".json":
+                print(f"Exported JSON: {path}")
+
     return 0
