@@ -2,7 +2,7 @@
 
 A beginner-friendly Python network scanner that discovers live hosts on an IPv4 subnet using concurrent ping requests.
 
-Version 4.0 adds clean HTML report export support with embedded styling and scan summary details. The code remains modular, commented, and built only with the Python standard library.
+Version 4.1 adds `--open-report`, which can automatically open generated HTML reports in your default web browser. The code remains modular, commented, and built only with the Python standard library.
 
 ## Features
 
@@ -21,6 +21,7 @@ Version 4.0 adds clean HTML report export support with embedded styling and scan
 - Customize scanned ports with `--ports`
 - Export scan results to CSV, JSON, or both with `--export`
 - Export a clean standalone HTML report with `--export html` or `--export all`
+- Open generated HTML reports automatically with `--open-report`
 - Choose the export folder with `--output`
 - Save scan history snapshots with `--save-history`
 - Compare the current scan to the last saved history with `--compare-last`
@@ -94,7 +95,7 @@ This will:
 Example output:
 
 ```
-NetScout v4.0
+NetScout v4.1
 
 Network Information
 -------------------
@@ -118,7 +119,7 @@ python -m netscout 192.168.1.0/24
 This will:
 
 ```
-NetScout v4.0
+NetScout v4.1
 
 Network Information
 -------------------
@@ -205,6 +206,12 @@ Save an HTML report:
 python -m netscout --export html
 ```
 
+Save an HTML report and open it in your default browser:
+
+```powershell
+python -m netscout --export html --open-report
+```
+
 Save both CSV and JSON files:
 
 ```powershell
@@ -215,6 +222,12 @@ Save CSV, JSON, and HTML files:
 
 ```powershell
 python -m netscout --export all
+```
+
+Save all formats and open the HTML report:
+
+```powershell
+python -m netscout --export all --open-report
 ```
 
 Use a manual subnet, custom ports, both export formats, and an output folder:
@@ -230,6 +243,12 @@ python -m netscout 192.168.1.0/24 --ports 22,80,443,445 --export all --output re
 ```
 
 `--export both` exports CSV and JSON only. Use `--export all` to include HTML.
+
+If `--open-report` is used without `--export html` or `--export all`, NetScout prints:
+
+```text
+No HTML report was generated. Use --export html or --export all with --open-report.
+```
 
 Exported files use timestamped names:
 
@@ -251,6 +270,7 @@ Export Results
 Exported CSV: results\netscout_scan_20260703_102620.csv
 Exported JSON: results\netscout_scan_20260703_102620.json
 Exported HTML: results\netscout_scan_20260703_102620.html
+Opened HTML report: results\netscout_scan_20260703_102620.html
 ```
 
 ### Save and compare scan history
@@ -315,7 +335,7 @@ Elapsed time: 12.34 seconds
 With auto-detection (no subnet provided):
 
 ```text
-NetScout v4.0
+NetScout v4.1
 
 Network Information
 -------------------
@@ -353,7 +373,7 @@ Scan complete. Found 3 live host(s).
 With manual subnet:
 
 ```text
-NetScout v4.0
+NetScout v4.1
 
 Network Information
 -------------------
@@ -389,7 +409,7 @@ Scan complete. Found 3 live host(s).
 With card view:
 
 ```text
-NetScout v4.0
+NetScout v4.1
 
 Network Information
 -------------------
@@ -449,8 +469,9 @@ Scan complete. Found 1 live host(s).
 14. The CLI prints a device inventory summary that counts live hosts by device type.
 15. The CLI prints a scan summary with host, port, and elapsed-time statistics.
 16. If `--export` is used, `export.py` saves CSV, JSON, and/or HTML report files.
-17. If `--save-history` is used, `history.py` saves the scan to a timestamped JSON file.
-18. If `--compare-last` is used, `history.py` compares the current scan with the newest previous history file.
+17. If `--open-report` is used with an HTML export, the CLI opens the report with Python's `webbrowser` module.
+18. If `--save-history` is used, `history.py` saves the scan to a timestamped JSON file.
+19. If `--compare-last` is used, `history.py` compares the current scan with the newest previous history file.
 
 ## Device Intelligence Notes
 

@@ -7,6 +7,7 @@ import ipaddress
 import shutil
 import textwrap
 import time
+import webbrowser
 from collections import Counter
 from typing import Sequence
 
@@ -69,6 +70,11 @@ def build_parser() -> argparse.ArgumentParser:
         "--output",
         default="results",
         help="Folder for exported scan files. Default: results",
+    )
+    parser.add_argument(
+        "--open-report",
+        action="store_true",
+        help="Open the generated HTML report in the default web browser.",
     )
     parser.add_argument(
         "--save-history",
@@ -428,6 +434,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         history_path = save_history(results)
         print(f"Saved history: {history_path}")
 
+    html_report_path = None
+
     if args.export:
         print_section_header("Export Results")
         report_info = {
@@ -457,6 +465,19 @@ def main(argv: Sequence[str] | None = None) -> int:
             elif path.suffix.lower() == ".json":
                 print(f"Exported JSON: {path}")
             elif path.suffix.lower() == ".html":
+                html_report_path = path
                 print(f"Exported HTML: {path}")
+
+    if args.open_report:
+        if html_report_path is None:
+            print(
+                "No HTML report was generated. "
+                "Use --export html or --export all with --open-report."
+            )
+        else:
+            # Resolve to a file:// URL so webbrowser can open it reliably.
+            report_url = html_report_path.resolve().as_uri()
+            webbrowser.open(report_url)
+            print(f"Opened HTML report: {html_report_path}")
 
     return 0
