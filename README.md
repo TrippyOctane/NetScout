@@ -2,7 +2,7 @@
 
 A beginner-friendly Python network scanner that discovers live hosts on an IPv4 subnet using concurrent ping requests.
 
-Version 3.8 adds a Device Inventory summary that counts discovered devices by detected device type. The code remains modular, commented, and built only with the Python standard library.
+Version 3.9 adds a compact device-card output format with `--view cards`. The code remains modular, commented, and built only with the Python standard library.
 
 ## Features
 
@@ -10,6 +10,7 @@ Version 3.8 adds a Device Inventory summary that counts discovered devices by de
 - Scan an IPv4 subnet in CIDR notation, such as `192.168.1.0/24`
 - Ping many hosts concurrently for faster discovery
 - Display every live host found in a clean table
+- Switch between table and card-style scan results with `--view`
 - Wrap long open-port lists cleanly inside the results table
 - Display scan statistics and elapsed scan time after each run
 - Look up the hostname for each live host
@@ -92,7 +93,7 @@ This will:
 Example output:
 
 ```
-NetScout v3.8
+NetScout v3.9
 
 Network Information
 -------------------
@@ -116,7 +117,7 @@ python -m netscout 192.168.1.0/24
 This will:
 
 ```
-NetScout v3.8
+NetScout v3.9
 
 Network Information
 -------------------
@@ -160,6 +161,28 @@ By default, the scanner checks these common ports:
 ```text
 22, 53, 80, 135, 139, 443, 445, 3389, 8080
 ```
+
+### Choose a result view
+
+The default view is the table view:
+
+```powershell
+python -m netscout --view table
+```
+
+Use card view for compact per-device output:
+
+```powershell
+python -m netscout --view cards
+```
+
+Card view also works with manual subnets and custom ports:
+
+```powershell
+python -m netscout 192.168.1.0/24 --ports 22,80,443,445 --view cards
+```
+
+The `--view` option only changes terminal output. Exports and history files keep the same fields.
 
 ### Export scan results
 
@@ -267,7 +290,7 @@ Elapsed time: 12.34 seconds
 With auto-detection (no subnet provided):
 
 ```text
-NetScout v3.8
+NetScout v3.9
 
 Network Information
 -------------------
@@ -305,7 +328,7 @@ Scan complete. Found 3 live host(s).
 With manual subnet:
 
 ```text
-NetScout v3.8
+NetScout v3.9
 
 Network Information
 -------------------
@@ -338,6 +361,47 @@ Elapsed time: 12.34 seconds
 Scan complete. Found 3 live host(s).
 ```
 
+With card view:
+
+```text
+NetScout v3.9
+
+Network Information
+-------------------
+Target Network: 192.168.1.0/24
+
+Scan Results
+------------
+Scanning 254 hosts on 192.168.1.0/24...
+
+Device 1
+--------
+IP Address: 192.168.1.193
+Hostname: DESKTOP-OQFOLL1.lan
+MAC Address: Unknown
+Vendor: Unknown
+Device Type: Windows PC
+Status: Live
+Open Ports:
+  - 135 (MSRPC)
+  - 139 (NetBIOS)
+  - 445 (SMB)
+
+Device Inventory
+----------------
+Windows PC: 1
+
+Scan Summary
+------------
+Hosts scanned: 254
+Live hosts found: 1
+Ports tested: 9
+Open ports found: 3
+Elapsed time: 12.34 seconds
+
+Scan complete. Found 1 live host(s).
+```
+
 ## How It Works
 
 1. `cli.py` reads the subnet from command-line arguments.
@@ -356,7 +420,7 @@ Scan complete. Found 3 live host(s).
 10. `scanner.py` uses simple rules to infer a device type from hostname, vendor, and open ports.
 11. `ports.py` checks common TCP ports, or the ports provided with `--ports`.
 12. The CLI prints clean section headers for network information, scan results, summary, history comparison, and export results.
-13. The CLI prints each live host in a table with IP address, hostname, MAC address, vendor, device type, status, and wrapped open ports.
+13. The CLI prints each live host in the selected view: table by default, or compact device cards with `--view cards`.
 14. The CLI prints a device inventory summary that counts live hosts by device type.
 15. The CLI prints a scan summary with host, port, and elapsed-time statistics.
 16. If `--export` is used, `export.py` saves the same scan fields to CSV, JSON, or both.

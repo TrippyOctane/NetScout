@@ -19,7 +19,7 @@ from netscout.history import (
     save_history,
 )
 from netscout.network import detect_network
-from netscout.ports import DEFAULT_PORTS, format_open_ports
+from netscout.ports import DEFAULT_PORTS, format_open_ports, get_service_name
 from netscout.scanner import ScanResult, scan_subnet
 
 
@@ -53,6 +53,12 @@ def build_parser() -> argparse.ArgumentParser:
             "Comma-separated TCP ports to scan. "
             f"Default: {','.join(str(port) for port in DEFAULT_PORTS)}"
         ),
+    )
+    parser.add_argument(
+        "--view",
+        choices=("table", "cards"),
+        default="table",
+        help="Choose scan result display format. Default: table",
     )
     parser.add_argument(
         "--export",
@@ -187,6 +193,30 @@ def print_results_table(results: list[ScanResult]) -> None:
                     for index, value in enumerate(display_row)
                 )
             )
+
+
+def print_results_cards(results: list[ScanResult]) -> None:
+    """Print scan results as compact per-device cards."""
+    for index, result in enumerate(results, start=1):
+        if index > 1:
+            print()
+
+        title = f"Device {index}"
+        print(title)
+        print("-" * len(title))
+        print(f"IP Address: {result.ip_address}")
+        print(f"Hostname: {result.hostname}")
+        print(f"MAC Address: {result.mac_address}")
+        print(f"Vendor: {result.vendor}")
+        print(f"Device Type: {result.device_type}")
+        print(f"Status: {result.status}")
+
+        if result.open_ports:
+            print("Open Ports:")
+            for port in result.open_ports:
+                print(f"  - {port} ({get_service_name(port)})")
+        else:
+            print("Open Ports: None")
 
 
 def _format_ports(ports: object) -> str:
@@ -357,8 +387,10 @@ def main(argv: Sequence[str] | None = None) -> int:
     )
     elapsed_seconds = time.perf_counter() - scan_started_at
 
-    if results:
+    if results and args.view == "table":
         print_results_table(results)
+    elif results and args.view == "cards":
+        print_results_cards(results)
     else:
         print("No live hosts found.")
 
