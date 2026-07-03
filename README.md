@@ -2,7 +2,7 @@
 
 A beginner-friendly Python network scanner that discovers live hosts on an IPv4 subnet using concurrent ping requests.
 
-Version 3.5 improves terminal readability with clean output sections and wrapped open-port lists. The code remains modular, commented, and built only with the Python standard library.
+Version 3.6 improves MAC address vendor detection with a larger built-in OUI table and normalized MAC lookups. The code remains modular, commented, and built only with the Python standard library.
 
 ## Features
 
@@ -23,7 +23,7 @@ Version 3.5 improves terminal readability with clean output sections and wrapped
 - Save scan history snapshots with `--save-history`
 - Compare the current scan to the last saved history with `--compare-last`
 - Detect MAC addresses for live hosts on the local network
-- Identify common hardware vendors from the MAC address OUI
+- Identify common hardware vendors from the first 3 bytes of each MAC address
 - Keep command-line parsing, network detection, ping logic, and scanning logic in separate modules
 - Use clear comments and type hints for learning
 
@@ -90,7 +90,7 @@ This will:
 Example output:
 
 ```
-NetScout v3.5
+NetScout v3.6
 
 Network Information
 -------------------
@@ -114,7 +114,7 @@ python -m netscout 192.168.1.0/24
 This will:
 
 ```
-NetScout v3.5
+NetScout v3.6
 
 Network Information
 -------------------
@@ -257,7 +257,7 @@ Elapsed time: 12.34 seconds
 With auto-detection (no subnet provided):
 
 ```text
-NetScout v3.5
+NetScout v3.6
 
 Network Information
 -------------------
@@ -289,7 +289,7 @@ Scan complete. Found 3 live host(s).
 With manual subnet:
 
 ```text
-NetScout v3.5
+NetScout v3.6
 
 Network Information
 -------------------
@@ -330,7 +330,7 @@ Scan complete. Found 3 live host(s).
 6. `ping.py` runs the correct system `ping` command for your operating system.
 7. For each live host, `scanner.py` tries a reverse DNS lookup to find a hostname.
 8. `device.py` reads the local ARP table to find the host MAC address when possible.
-9. `vendor.py` uses the MAC address OUI to identify common hardware vendors.
+9. `vendor.py` normalizes each MAC address and uses the first 3 bytes, called the OUI, to identify common hardware vendors.
 10. `ports.py` checks common TCP ports, or the ports provided with `--ports`.
 11. The CLI prints clean section headers for network information, scan results, summary, history comparison, and export results.
 12. The CLI prints each live host in a table with IP address, hostname, MAC address, vendor, status, and wrapped open ports.
@@ -343,7 +343,7 @@ Scan complete. Found 3 live host(s).
 
 MAC address detection depends on the local ARP table. This works best for devices on your own local network after they have responded to ping. Devices outside your local network, devices blocked by firewall rules, or hosts that do not appear in ARP will show `Unknown`.
 
-Vendor detection uses a small built-in OUI table for common vendors including Dell, HP, Cisco, Intel, ASUS, TP-Link, Ubiquiti, Synology, Apple, Microsoft, VMware, Raspberry Pi, and Netgear. The table lives in `vendor.py` so it can be expanded later.
+Vendor detection normalizes MAC addresses before lookup, so formats like `AA:BB:CC:11:22:33` and `aa-bb-cc-11-22-33` are treated the same. NetScout matches the first 3 bytes of the MAC address against the built-in OUI table. The table includes common prefixes for Apple, Google, Ring, Amazon, TP-Link, ASUS, Netgear, Ubiquiti, Samsung, Intel, Dell, HP, Microsoft, VMware, Raspberry Pi, Aqara, Cisco, and Synology. If no prefix matches, NetScout shows `Unknown`.
 
 ## Safety Note
 
