@@ -75,8 +75,8 @@ def load_history(history_path: Path) -> list[dict[str, Any]]:
     with history_path.open("r", encoding="utf-8") as history_file:
         history_data = json.load(history_file)
 
-    # Version 3.3 stores results inside a small metadata wrapper. This fallback
-    # also accepts a plain list in case a beginner edits a file by hand.
+    # History files store results inside a small metadata wrapper. This
+    # fallback also accepts a plain list in case a beginner edits a file by hand.
     if isinstance(history_data, dict):
         results = history_data.get("results", [])
     else:

@@ -2,7 +2,7 @@
 
 A beginner-friendly Python network scanner that discovers live hosts on an IPv4 subnet using concurrent ping requests.
 
-Version 3.3 adds scan history and comparison support, so you can save snapshots and see what changed between scans. The code remains modular, commented, and built only with the Python standard library.
+Version 3.4 adds scan statistics and elapsed scan time, so each run ends with a clear summary of what was scanned and found. The code remains modular, commented, and built only with the Python standard library.
 
 ## Features
 
@@ -10,6 +10,7 @@ Version 3.3 adds scan history and comparison support, so you can save snapshots 
 - Scan an IPv4 subnet in CIDR notation, such as `192.168.1.0/24`
 - Ping many hosts concurrently for faster discovery
 - Display every live host found in a clean table
+- Display scan statistics and elapsed scan time after each run
 - Look up the hostname for each live host
 - Show `Unknown` when a live host has no hostname
 - Scan common TCP ports on each live host
@@ -88,7 +89,7 @@ This will:
 Example output:
 
 ```
-NetScout v3.3
+NetScout v3.4
 Local IP: 192.168.1.100
 Gateway: 192.168.1.1
 Detected Network: 192.168.1.0/24
@@ -107,7 +108,7 @@ python -m netscout 192.168.1.0/24
 This will:
 
 ```
-NetScout v3.3
+NetScout v3.4
 
 Scanning 254 hosts on 192.168.1.0/24...
 ```
@@ -216,12 +217,25 @@ netscout_history_YYYYMMDD_HHMMSS.json
 
 The comparison report shows new devices, missing devices, hostname changes, MAC address changes, and open port changes.
 
+### Scan summary
+
+After the results table, NetScout prints a summary:
+
+```text
+Scan Summary
+Hosts scanned: 254
+Live hosts found: 3
+Ports tested: 9
+Open ports found: 4
+Elapsed time: 12.34 seconds
+```
+
 ## Example Output
 
 With auto-detection (no subnet provided):
 
 ```text
-NetScout v3.3
+NetScout v3.4
 Local IP: 192.168.1.100
 Gateway: 192.168.1.1
 Detected Network: 192.168.1.0/24
@@ -234,13 +248,20 @@ IP Address   | Hostname     | MAC Address       | Vendor  | Status | Open Ports
 192.168.1.25 | laptop.local | D0:67:E5:AA:BB:CC | Dell    | Live   | 445 (SMB), 3389 (RDP)
 192.168.1.42 | Unknown      | Unknown           | Unknown | Live   | None
 
+Scan Summary
+Hosts scanned: 254
+Live hosts found: 3
+Ports tested: 9
+Open ports found: 4
+Elapsed time: 12.34 seconds
+
 Scan complete. Found 3 live host(s).
 ```
 
 With manual subnet:
 
 ```text
-NetScout v3.3
+NetScout v3.4
 
 Scanning 254 hosts on 192.168.1.0/24...
 
@@ -249,6 +270,13 @@ IP Address   | Hostname     | MAC Address       | Vendor  | Status | Open Ports
 192.168.1.1  | router.local | A0:F3:C1:12:34:56 | TP-Link | Live   | 53 (DNS), 80 (HTTP)
 192.168.1.25 | laptop.local | D0:67:E5:AA:BB:CC | Dell    | Live   | 445 (SMB), 3389 (RDP)
 192.168.1.42 | Unknown      | Unknown           | Unknown | Live   | None
+
+Scan Summary
+Hosts scanned: 254
+Live hosts found: 3
+Ports tested: 9
+Open ports found: 4
+Elapsed time: 12.34 seconds
 
 Scan complete. Found 3 live host(s).
 ```
@@ -270,9 +298,10 @@ Scan complete. Found 3 live host(s).
 9. `vendor.py` uses the MAC address OUI to identify common hardware vendors.
 10. `ports.py` checks common TCP ports, or the ports provided with `--ports`.
 11. The CLI prints each live host in a table with IP address, hostname, MAC address, vendor, status, and open ports.
-12. If `--export` is used, `export.py` saves the same scan fields to CSV, JSON, or both.
-13. If `--save-history` is used, `history.py` saves the scan to a timestamped JSON file.
-14. If `--compare-last` is used, `history.py` compares the current scan with the newest previous history file.
+12. The CLI prints a scan summary with host, port, and elapsed-time statistics.
+13. If `--export` is used, `export.py` saves the same scan fields to CSV, JSON, or both.
+14. If `--save-history` is used, `history.py` saves the scan to a timestamped JSON file.
+15. If `--compare-last` is used, `history.py` compares the current scan with the newest previous history file.
 
 ## Device Intelligence Notes
 

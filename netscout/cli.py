@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import ipaddress
+import time
 from typing import Sequence
 
 from netscout import __version__
@@ -211,6 +212,22 @@ def print_history_comparison(
         print("  None")
 
 
+def print_scan_summary(
+    hosts_scanned: int,
+    live_hosts_found: int,
+    ports_tested: int,
+    open_ports_found: int,
+    elapsed_seconds: float,
+) -> None:
+    """Print a short summary of scan statistics."""
+    print("\nScan Summary")
+    print(f"Hosts scanned: {hosts_scanned}")
+    print(f"Live hosts found: {live_hosts_found}")
+    print(f"Ports tested: {ports_tested}")
+    print(f"Open ports found: {open_ports_found}")
+    print(f"Elapsed time: {elapsed_seconds:.2f} seconds")
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     """Parse arguments, run the scan, and print the results."""
     parser = build_parser()
@@ -268,17 +285,29 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     print(f"Scanning {host_count} hosts on {network}...\n")
 
+    # Measure only the actual scan work, not argument parsing or printing.
+    scan_started_at = time.perf_counter()
     results = scan_subnet(
         network=network,
         ports=ports,
         timeout=args.timeout,
         max_workers=args.workers,
     )
+    elapsed_seconds = time.perf_counter() - scan_started_at
 
     if results:
         print_results_table(results)
     else:
         print("No live hosts found.")
+
+    open_ports_found = sum(len(result.open_ports) for result in results)
+    print_scan_summary(
+        hosts_scanned=host_count,
+        live_hosts_found=len(results),
+        ports_tested=len(ports),
+        open_ports_found=open_ports_found,
+        elapsed_seconds=elapsed_seconds,
+    )
 
     print(f"\nScan complete. Found {len(results)} live host(s).")
 
